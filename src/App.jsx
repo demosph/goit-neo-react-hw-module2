@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import Description from "./components/Description/Description.jsx";
+import Feedback from "./components/Feedback/Feedback.jsx";
+import Options from "./components/Options/Options.jsx";
+import Notification from "./components/Notification/Notification.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [feedbacks, setFeedbacks] = useState(() => {
+    const savedFeedbacks = localStorage.getItem("feedbacks");
+    return savedFeedbacks ? JSON.parse(savedFeedbacks) : { good: 0, neutral: 0, bad: 0 };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("feedbacks", JSON.stringify(feedbacks));
+  }, [feedbacks]);
+
+  const updateFeedback = feedbackType => {
+    setFeedbacks(prevFeedbacks => ({
+      ...prevFeedbacks,
+      [feedbackType]: prevFeedbacks[feedbackType] + 1
+    }));
+  };
+
+  const resetFeedbacks = () => {
+    setFeedbacks({
+      good: 0,
+      neutral: 0,
+      bad: 0
+    });
+  };
+
+  const totalFeedback = feedbacks.good + feedbacks.neutral + feedbacks.bad;
+  const positiveFeedbackPercentage = totalFeedback > 0
+    ? Math.round((feedbacks.good / totalFeedback) * 100)
+    : 0;
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Description
+        name="Sip Happens Café"
+        description="Please leave your feedback about our service by selecting one of the options below."
+      />
+      <Options
+        updateFeedback={updateFeedback}
+        resetFeedback={resetFeedbacks}
+        totalFeedback={totalFeedback}
+      />
+      {totalFeedback > 0 ? (
+        <Feedback
+          feedbacks={feedbacks}
+          totalFeedback={totalFeedback}
+          positiveFeedbackPercentage={positiveFeedbackPercentage}
+        />
+      ) : (
+        <Notification message="No feedback given" />
+      )}
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
